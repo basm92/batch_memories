@@ -67,3 +67,5 @@ def run_archive_interaction(url: str):
                     textarea = page.locator("div.mi_link_box textarea").first
                     textarea.wait_for(state="visible", timeout=5000)
                     text_content = textarea.input_value() # Use input_value() for textareas. [4,
+                    print("hello")
+                    
