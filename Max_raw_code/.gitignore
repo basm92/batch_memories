@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+processed_ids.json
+.env
+playwright-report/
+
