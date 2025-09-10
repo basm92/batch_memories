@@ -43,6 +43,7 @@ def download_given_link(link_locator):
     fill in the email, send the email, close the iframe and close the link.
     """
     link_locator.click()
+    page.wait_for_load_state('domcontentloaded')
     parent_div_locator = link_locator.locator('xpath=./ancestor::div[contains(@class, "mi_tree_content")][1]')
     thumbnail_link_locator = parent_div_locator.locator('a.mi_stripthumb').first
     thumbnail_link_locator.click()
@@ -51,15 +52,19 @@ def download_given_link(link_locator):
     iframe_locator = page.frame_locator('iframe[allowtransparency = "true"]')
     download_button_in_frame = iframe_locator.locator('#download')
     download_button_in_frame.click()
+    page.wait_for_load_state('domcontentloaded')
     # Step 3: Find box for and insert Email
     iframe_locator.locator("input[type='email']").fill("memoriesretrieval@gmail.com")
     # Step 4: Send Email
     iframe_locator.locator("button[type='submit']").click()
+    page.wait_for_load_state('domcontentloaded')
     # Step 5: Close the iframe and go back to main page
     close_button = iframe_locator.get_by_role("button", name=" Sluiten ")
     close_button.click()
+    page.wait_for_load_state('domcontentloaded')
     # Step 6: Also close the link
     link_locator.click()
+    page.wait_for_load_state('domcontentloaded')
 
 
 # Loop through the collected links and download each
