@@ -12,7 +12,7 @@ source $(conda info --base)/etc/profile.d/conda.sh
 conda activate memories_project
 
 echo "Installing packages from requirements.txt..."
-pip install playwright==1.47.0 python-dotenv==1.0.1 pydantic==2.8.2 email-validator==2.1.1 pydantic-email-validator==0.1.0
+pip install playwright==1.47.0 python-dotenv==1.0.1 pydantic==2.8.2 pydantic[email] email-validator==2.1.1 pydantic-email-validator==0.1.0
 
 echo "Installing Chromium browser for Playwright..."
 playwright install chromium
