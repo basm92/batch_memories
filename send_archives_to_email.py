@@ -65,6 +65,7 @@ def download_given_link(link_locator):
 # Loop through the collected links and download each
 for link in links_to_click:
     try:
+        print(f"Processing link with text: {link.text_content()}")
         download_given_link(link)
     except Error as e:
         print(f"An error occurred while processing a link: {e}")
