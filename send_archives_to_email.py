@@ -16,6 +16,16 @@ page = browser.new_page()
 print("Navigating to the URL...")
 page.goto("https://hetutrechtsarchief.nl/collectie/609C5BCE05EA4642E0534701000A17FD")
 
+# Step 1: Find 399
+
+# Step 2: Open Tab
+
+# Step 3: Insert Email
+
+
+# Step 4: Send Email
+
+
 # Close the browser window
 print("Closing the browser.")
 browser.close()
