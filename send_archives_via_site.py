@@ -1,309 +1,142 @@
-# -*- coding: utf-8 -*-
-"""
-Memories Project — автопереход во viewer и отправка на e-mail ссылки
-'Download volledige reeks bestanden' для дел 399..502 на Het Utrechts Archief.
-
-Поток:
-1) Открываем список (инвентарь).
-2) Идём по ссылкам-делам: 399..502.
-3) Для каждого дела:
-   - кликаем заголовок дела (карточка раскрывается),
-   - кликаем ПЕРВУЮ миниатюру (a.mi_stripthumb) внутри карточки → открывается viewer,
-   - во viewer вводим e-mail и жмём 'Verstuur' (если DRY_RUN=false),
-   - закрываем viewer ('Sluiten') и продолжаем.
-
-Повторы исключаем через processed_ids.json.
-"""
-
-from __future__ import annotations
-import json
 import os
 import re
+import json
+import smtplib
+from email.message import EmailMessage
 from pathlib import Path
-from typing import Dict, List, Optional
-
-# --- СУПЕР-ГРОМКИЕ МЕТКИ, чтобы понять, что запускается ИМЕННО ЭТОТ ФАЙЛ ---
-print(">>> BUILD TAG: v3")
-print(">>> ABSOLUTE FILE:", Path(__file__).resolve())
+from typing import Optional, Dict
 
 from dotenv import load_dotenv
-from pydantic import BaseModel, EmailStr
-from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
+from pydantic import EmailStr
+from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout, Error as PWError
 
+# ─────────────────────────── Config ───────────────────────────
+START_URL = (
+    "https://hetutrechtsarchief.nl/onderzoek/resultaten/archieven"
+    "?mizig=210&miadt=39&miaet=1&micode=337-7&minr=5611808&miview=inv2"
+)
+START_NUMBER = 399                   # начинать с этого номера инвентаря
+STATE_FILE = Path("state.json")      # хранит уже отправленные заголовки
+HEADLESS = False                     # можно True, если не хочешь видеть браузер
+OPEN_DELAY_SEC = 0.7                 # мягкая пауза между действиями
+# ──────────────────────────────────────────────────────────────
 
-STATE_FILE = "processed_ids.json"
-
-
-# -----------------------------------------------------------------------------
-# Конфиг из .env
-# -----------------------------------------------------------------------------
-class Config(BaseModel):
-    START_URL: str
-    MIN_NUMBER: int = 399
-    MAX_NUMBER: int = 502
-    EMAIL_TO: EmailStr
-    HEADLESS: bool = False
-    SLOW_MO_MS: int = 200
-    DRY_RUN: bool = True
-    PAUSE_BETWEEN_MS: int = 1200
-
-
-def load_config() -> Config:
-    load_dotenv()
-    return Config(
-        START_URL=os.getenv("START_URL", "").strip(),
-        MIN_NUMBER=int(os.getenv("MIN_NUMBER", "399")),
-        MAX_NUMBER=int(os.getenv("MAX_NUMBER", "502")),
-        EMAIL_TO=os.getenv("EMAIL_TO", "").strip(),
-        HEADLESS=os.getenv("HEADLESS", "false").lower() == "true",
-        SLOW_MO_MS=int(os.getenv("SLOW_MO_MS", "200")),
-        DRY_RUN=os.getenv("DRY_RUN", "true").lower() == "true",
-        PAUSE_BETWEEN_MS=int(os.getenv("PAUSE_BETWEEN_MS", "1200")),
-    )
-
-
-# -----------------------------------------------------------------------------
-# Состояние
-# -----------------------------------------------------------------------------
 def load_state() -> Dict[str, bool]:
-    if os.path.exists(STATE_FILE):
+    if STATE_FILE.exists():
         try:
-            with open(STATE_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
+            return json.loads(STATE_FILE.read_text(encoding="utf-8"))
         except Exception:
             pass
     return {}
 
-
 def save_state(state: Dict[str, bool]) -> None:
-    with open(STATE_FILE, "w", encoding="utf-8") as f:
-        json.dump(state, f, ensure_ascii=False, indent=2)
+    STATE_FILE.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
 
+def parse_number(text: str) -> Optional[int]:
+    """Из '399 1877 jan.-mrt.' достаём 399."""
+    m = re.match(r"^\s*(\d+)\b", text or "")
+    return int(m.group(1)) if m else None
 
-# -----------------------------------------------------------------------------
-# Утилиты
-# -----------------------------------------------------------------------------
-NUM_RE = re.compile(r"^\s*(\d{1,4})\b")
-
-
-def extract_leading_number(text: str) -> Optional[int]:
-    m = NUM_RE.search(text or "")
-    if not m:
-        return None
-    try:
-        return int(m.group(1))
-    except Exception:
-        return None
-
-
-def get_list_locator(page):
-    """Локатор ссылок в списке дел (страница инвентаря)."""
-    for css in [
-        "a.mi_tree_content.mi_hyperlink",
-        "a.mi_hyperlink.mi_tree_content",
-        "div.mi_tree_content a.mi_hyperlink",
-        "a.mi_hyperlink",
-    ]:
-        loc = page.locator(css)
-        if loc.count() > 0:
-            return loc
-    return page.locator("a.mi_hyperlink")
-
-
-def close_viewer(page) -> None:
-    """Закрыть viewer (крестик/Sluiten) и вернуться к списку."""
-    for sel in [
-        "text=Sluiten",
-        "button:has-text('Sluiten')",
-        "a:has-text('Sluiten')",
-        "button[title*='Sluiten']",
-        "a[title*='Sluiten']",
-    ]:
-        try:
-            page.locator(sel).first.click(timeout=1500)
-            page.wait_for_load_state("networkidle", timeout=6000)
-            return
-        except Exception:
-            pass
-    try:
-        page.keyboard.press("Escape")
-    except Exception:
-        pass
-
-
-# -----------------------------------------------------------------------------
-# Открытие viewer: кликаем миниатюру внутри раскрытой карточки
-# -----------------------------------------------------------------------------
-def open_viewer_from_card(page, link_locator, num: Optional[int] = None) -> None:
+def get_durable_url(page) -> str:
     """
-    Мы уже кликнули ссылку дела (карточка раскрыта).
-    Кликаем ПЕРВУЮ миниатюру (a.mi_stripthumb) внутри этой карточки,
-    чтобы попасть в viewer (слева панель 'Download').
+    В открытой карточке: нажимаем «поделиться» и читаем textarea с 'Duurzaam webadres'.
+    Возвращаем сам URL.
     """
-    print(f">>> CALL open_viewer_from_card num={num}")
+    share_btn = page.locator("button.mi_button_a_style").first
+    share_btn.wait_for(state="visible", timeout=10_000)
+    share_btn.click()
+    page.wait_for_timeout(int(OPEN_DELAY_SEC * 1000))
 
-    # ближайший контейнер карточки
-    container = link_locator.locator("xpath=ancestor::div[contains(@class,'mi')][1]")
+    textarea = page.locator("div.mi_link_box textarea").first
+    textarea.wait_for(state="visible", timeout=10_000)
+    url = textarea.input_value().strip()
+    if not url:
+        raise RuntimeError("Пустой durable url")
+    return url
 
-    # миниатюра внутри этой карточки
-    thumb = container.locator("a.mi_stripthumb").first
-    thumb.wait_for(timeout=8000)
-    thumb.click(timeout=4000)
-
-    # во viewer ждём панель/поле E-mail
-    try:
-        page.locator("text=Download").first.wait_for(timeout=8000)
-    except Exception:
-        pass
-    page.locator("input[placeholder*='E-mail' i], input[type='email']").first.wait_for(timeout=8000)
-
-
-# --- АЛИАС: если где-то осталось старое имя, всё равно пойдём в новую функцию
-def open_viewer_from_record(*args, **kwargs):
-    # важно: это определение ДОЛЖНО быть единственным с таким именем
-    return open_viewer_from_card(*args, **kwargs)
-
-
-def submit_email_for_full_series(page, email: str, dry_run: bool) -> None:
+def send_email_smtp(to_email: EmailStr, subject: str, body: str):
     """
-    Во viewer:
-      - находим поле E-mail,
-      - вводим адрес,
-      - нажимаем 'Verstuur' (если не DRY_RUN).
+    Простой SMTP (Gmail/любой). Читает SMTP_* из .env.
     """
-    email_input = page.locator("input[placeholder*='E-mail' i], input[type='email']").first
-    email_input.fill(email)
-    if not dry_run:
-        page.locator("button:has-text('Verstuur')").first.click(timeout=4000)
-        page.wait_for_timeout(1200)
+    host = os.getenv("SMTP_HOST")
+    port = int(os.getenv("SMTP_PORT", "587"))
+    user = os.getenv("SMTP_USER")
+    pwd  = os.getenv("SMTP_PASS")
+    if not (host and user and pwd):
+        raise RuntimeError("Не настроены SMTP_HOST/SMTP_USER/SMTP_PASS в .env")
 
+    msg = EmailMessage()
+    msg["From"] = user
+    msg["To"] = str(to_email)
+    msg["Subject"] = subject
+    msg.set_content(body)
 
-# -----------------------------------------------------------------------------
-# Основной сценарий
-# -----------------------------------------------------------------------------
-def scrape_and_send(cfg: Config) -> None:
-    state = load_state()
-    processed_now: List[int] = []
+    with smtplib.SMTP(host, port) as s:
+        s.starttls()
+        s.login(user, pwd)
+        s.send_message(msg)
 
-    from playwright.sync_api import Error as PWError
+def scrape_and_send(url: str, email_to: EmailStr):
+    """
+    Открываем список, идём по пунктам ≥ START_NUMBER, шлём письма с durable-ссылкой.
+    """
+    # Windows не требует DISPLAY; строка ниже нужна только для linux/Xvfb,
+    # можно смело удалить на Windows:
+    # os.environ['DISPLAY'] = ':1'
+
+    sent = load_state()
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=cfg.HEADLESS, slow_mo=cfg.SLOW_MO_MS)
-        context = browser.new_context(
-            viewport={"width": 1400, "height": 920},
-            user_agent=("Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                        "AppleWebKit/537.36 (KHTML, like Gecko) "
-                        "Chrome/124.0.0.0 Safari/537.36"),
-        )
-        page = context.new_page()
+        browser = p.chromium.launch(headless=HEADLESS, slow_mo=50 if not HEADLESS else 0)
+        page = browser.new_page()
+        page.goto(url, wait_until="domcontentloaded", timeout=90_000)
 
-        print("Открываю список:", cfg.START_URL)
-        page.goto(cfg.START_URL, wait_until="domcontentloaded", timeout=90_000)
-        page.wait_for_load_state("networkidle", timeout=30_000)
-
-        # Cookie-баннер (если появится)
-        for sel in ["button:has-text('Akkoord')", "button:has-text('Accept')",
-                    "text=Akkoord", "text=Accept all"]:
-            try:
-                page.locator(sel).first.click(timeout=1500)
-                break
-            except Exception:
-                pass
-
-        # дождаться хотя бы одной ссылки
-        try:
-            page.locator("a.mi_hyperlink").first.wait_for(timeout=15_000)
-        except Exception:
-            pass
-
-        items = get_list_locator(page)
+        items = page.locator("a.mi_tree_content.mi_hyperlink")
         count = items.count()
-        if count == 0:
-            print("❌ Не найден список дел — проверь URL/верстку.")
-            browser.close()
-            return
+        print(f"Найдено элементов: {count}")
 
-        # быстрый листинг
-        print("Первые записи:")
-        for i in range(min(15, count)):
-            try:
-                t = (items.nth(i).text_content(timeout=3000) or "").strip()
-            except Exception:
-                t = "<непрочитано>"
-            print(" -", t)
-
-        # цикл по делам
         for i in range(count):
             link = items.nth(i)
+
+            # берём заголовок элемента
             try:
-                raw_text = (link.text_content(timeout=6000) or "").strip()
+                title = (link.text_content(timeout=7000) or "").strip()
             except PWTimeout:
+                print(f"[{i+1}/{count}] не удалось прочитать текст — пропуск")
                 continue
 
-            num = extract_leading_number(raw_text)
-            if num is None or num < cfg.MIN_NUMBER or num > cfg.MAX_NUMBER:
+            num = parse_number(title)
+            if num is None or num < START_NUMBER:
                 continue
 
-            key = str(num)
-            if state.get(key):
-                print(f"[{i+1}/{count}] №{num} уже обработан — пропуск")
+            if title in sent:
+                print(f"[{i+1}/{count}] #{num} уже отправлен — пропуск")
                 continue
 
-            print(f"[{i+1}/{count}] Обрабатываю №{num}: {raw_text}")
-
-            # 1) открыть карточку дела
+            print(f"\n[{i+1}/{count}] Обрабатываю: {title}")
             try:
-                link.scroll_into_view_if_needed(timeout=2000)
-            except Exception:
-                pass
-            try:
-                link.click(timeout=10_000)
-                page.wait_for_load_state("networkidle", timeout=8000)
-            except (PWTimeout, PWError):
-                print("  ⚠ Не получилось кликнуть — пропуск")
-                continue
+                link.click()
+                page.wait_for_timeout(int(OPEN_DELAY_SEC * 1000))
 
-            # 2) кликнуть миниатюру -> войти во viewer
-            try:
-                # если вдруг где-то осталось старое имя — сработает алиас
-                open_viewer_from_card(page, link, num)
-            except Exception as e:
-                print(f"  ❌ Не удалось открыть viewer для №{num}: {e}")
-                close_viewer(page)
-                continue
+                durable = get_durable_url(page)
 
-            # 3) отправка e-mail (или имитация)
-            try:
-                submit_email_for_full_series(page, cfg.EMAIL_TO, cfg.DRY_RUN)
-                processed_now.append(num)
-                state[key] = True
-                save_state(state)
-                print(f"  {'[DRY RUN] имитация' if cfg.DRY_RUN else '✅ Отправлено'} (№{num})")
-            except PWTimeout:
-                print("  ❌ Не нашёл поле E-mail/кнопку Verstuur — пропуск")
-            except Exception as e:
-                print("  ❌ Ошибка при отправке:", e)
+                subject = f"Het Utrechts Archief — {title}"
+                body = f"{title}\n{durable}\n\nИсточник раздела:\n{START_URL}"
 
-            # 4) закрыть viewer и вернуться к списку
-            close_viewer(page)
+                send_email_smtp(email_to, subject, body)
+                print(f"  ✔ Письмо отправлено на {email_to}")
 
-            # DOM мог измениться — пересоберём локатор
-            items = get_list_locator(page)
-            page.wait_for_timeout(cfg.PAUSE_BETWEEN_MS)
+                sent[title] = True
+                save_state(sent)
+            except (PWError, PWTimeout, Exception) as e:
+                print(f"  ✖ Ошибка: {e} — продолжаю со следующей")
 
         browser.close()
 
-    print("\nИтого обработано в этом запуске:", len(processed_now))
-
-
 def main():
-    cfg = load_config()
-    print("== Memories Project — e-mail ссылки на полные серии ==")
-    print(f"Диапазон: {cfg.MIN_NUMBER}..{cfg.MAX_NUMBER}   |   DRY_RUN={cfg.DRY_RUN}")
-    print(f"Адресат: {cfg.EMAIL_TO}")
-    print(f"Стартовая страница:\n{cfg.START_URL}\n")
-    scrape_and_send(cfg)
-
+    load_dotenv()
+    email_to = os.getenv("TARGET_EMAIL", "memoriesretrieval@gmail.com")
+    scrape_and_send(START_URL, email_to)
 
 if __name__ == "__main__":
     main()
