@@ -4,4 +4,4 @@ processed_ids.json
 .env
 playwright-report/
 .jpg
-/.jpg
+*/.jpg
