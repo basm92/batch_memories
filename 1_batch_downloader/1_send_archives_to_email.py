@@ -1,6 +1,7 @@
 # Save this code as a Python file (e.g., run_playwright.py)
 from playwright.sync_api import sync_playwright, Error
 import re
+import time  
 
 # Manually start the Playwright service and launch browser
 p = sync_playwright().start()
@@ -49,21 +50,26 @@ def download_given_link(link_locator, iteration=0):
     print("Clicked on the thumbnail containing the book pcitures")
     # Find the download button
     iframe_locator = page.frame_locator('iframe[allowtransparency = "true"]')
-    if iteration == 0:
-        download_button_in_frame = iframe_locator.locator('#download')
-        download_button_in_frame.click()
-        page.wait_for_load_state('domcontentloaded')
-    print("Successfully clicked the download button")
-    # Step 3: Find box for and insert Email
-    iframe_locator.locator("input[type='email']").fill("memoriesretrieval@gmail.com")
-    # Step 4: Send Email
+    download_button_in_frame = iframe_locator.locator('#download')
+    download_button_in_frame.click()
+
+    # Явно ждём появления поля e-mail
+    email_input = iframe_locator.locator("input[type='email']")
+    email_input.wait_for(state="visible", timeout=15000)
+    email_input.fill("memoriesretrieval@gmail.com")
+
+    # Нажать "Verstuur"
     iframe_locator.locator("button[type='submit']").click()
-    page.wait_for_load_state('domcontentloaded')
-    print("Successfully sent the email")
-    # Step 5: Close the iframe and go back to main page
-    close_button = iframe_locator.get_by_role("button", name=" Sluiten ")
+
+    # Ждём подтверждение (текст) или хотя бы паузу
+    time.sleep(5)
+
+    # Закрыть viewer
+    close_button = iframe_locator.get_by_role("button", name="Sluiten")
     close_button.click()
-    page.wait_for_load_state('domcontentloaded')
+
+    # Ждём, пока iframe исчезнет из DOM
+    page.wait_for_selector('iframe[allowtransparency="true"]', state="detached", timeout=15000)
     print("Successfully closed the iframe")
     # Step 6: Click on the cross sign to close the thumbnail
     
@@ -78,9 +84,12 @@ for iteration, link in enumerate(links_to_click):
     try:
         print(f"Processing {iteration} link with text: {link.text_content()}")
         download_given_link(link, iteration)
+        # добавить паузу между делами
+        time.sleep(5)
     except Error as e:
         print(f"An error occurred while processing a link: {e}")
         continue
+
 
 # Close the browser window
 print("Closing the browser.")
