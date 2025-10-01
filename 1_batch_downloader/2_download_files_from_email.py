@@ -34,7 +34,7 @@ SEARCH_QUERY: str = "from:(inlichtingen@hetutrechtsarchief.nl) newer_than:60d"
 DOWNLOAD_DIR: str = str(Path.cwd() / "downloads")
 
 # Maximum threads (email conversations) to open from the search results. Set to None for no limit.
-MAX_THREADS: int | None = 25
+MAX_THREADS: int = 25
 
 # How long to wait (seconds) for manual login before timing out
 WAIT_LOGIN_TIMEOUT_SECONDS: int = 600  # 10 minutes
