@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 from datetime import date, datetime
 import os
 
-load_dotenv('environ.env')  
+load_dotenv('../environ.env')  
 
 # --- API Key Setup ---
 try:
@@ -50,8 +50,10 @@ class EstateDataSchema(BaseModel):
 # Upload the images
 uploaded_files = {}
 images = [i for i in os.listdir('./example_memorie/example1')]# if i.startswith('NL-HlmNHA_178_2789')]
+images = ['../downloads/bestanden_archiefbank__projecten2019_dtr05_2019_3377_20190913_003_502_1828836047_6b0a5/NL-UtHUA_337-7_502_0003.jpg', '../downloads/bestanden_archiefbank__projecten2019_dtr05_2019_3377_20190913_003_502_1828836047_6b0a5/NL-UtHUA_337-7_502_0004.jpg', '../downloads/bestanden_archiefbank__projecten2019_dtr05_2019_3377_20190913_003_502_1828836047_6b0a5/NL-UtHUA_337-7_502_0005.jpg']
 for i in images:
-    uploaded_files[i] = client.files.upload(file=os.path.join('./example_memorie/example1/', i))
+    #uploaded_files[i] = client.files.upload(file=os.path.join('./example_memorie/example1/', i))
+    uploaded_files[i] = client.files.upload(file=i)
 # Prompt text
 prompt_text = """Transcribe the information present in the images to json."""
 
