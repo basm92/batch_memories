@@ -3,5 +3,5 @@ __pycache__/
 processed_ids.json
 .env
 playwright-report/
-.jpg
-*/.jpg
+*.jpg
+environ.env
