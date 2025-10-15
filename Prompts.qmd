@@ -1,10 +1,282 @@
+---
+title: "Memories Project — Transcription Model Tests"
+author: "Maksim Spirov"
+date: 2025-10-12
+format: 
+---
 
+# 📄 Overview
 
-##ChatGPT
-Version - 
-Prompt
+This document collects and compares transcription outputs from various LLM and HWR models on selected 19th-century Dutch handwritten archives.
 
-##Transkribus – “Dutchess I” Model
-No Prompt needed
+---
 
-##
+## 🧩 Test Metadata
+
+**Document ID:** NL-UTHUA-337-7-399-0001  
+**Pages tested:** 1 of 210  
+**Period:** January – March 1877  
+**File path:** `/batch_memories/downloads/NL-UtHUA_337-7_399_0001.jpg`
+
+---
+
+## ⚙️ Models Compared
+
+| Model | Version | Performance and Notes |
+|:------|:------|:------|
+| Transkribus | Dutchess I |Great performance, occurs only logical errors |
+| Transkribus + Open-AI | Dutchess I + Chat-GPT 5 |Great performance, occurs only logical errors |
+| Open-AI | Chat-Gpt 5 | | 
+| Anthropic Claude | Opus 4 | |
+| Google Bard (Vision-Fallback) |  | | 
+| Microsoft Bing Chat (Image OCR) |  | 
+| Google Cloud Vision API (Handwriting OCR) |  | | 
+| Microsoft Azure Cognitive OCR (Read API) |  | | 
+| Amazon Textract |  | | 
+| ABBYY FineReader |  | | 
+| Tesseract OCR |  | | 
+| Kraken OCR/HTR |  | | 
+| Calamari OCR |  | | 
+| Jaided EasyOCR |  | |
+| PaddleOCR |  | | 
+| Microsoft TrOCR |  | | 
+| Naver Donut |  | | 
+| ARletta Historic Dutch Models |  | | 
+| LLaVA |  | | 
+| Mistral 7B (with OCR Prompting) |  | | 
+
+---
+
+## 🧠 Model Output Samples
+
+### 🔹 Model: Transkribus
+### 🔹 Version: Dutchess I
+**Prompt:** _No prompt needed_  
+**Result:** 
+
+```text 
+Reg=r 1 N:o 5774797
+Memorie van aangifte der
+Geboekt 9 february 1947
+naatenschap van den Heer
+dae=r d=o 31 f=o 175 N=o 2 /6333
+Pieter Knops, gewoond hebben
+Tafel 5 leis d=o 20 f=o 96 N=o 64
+de en overleden te Utrecht
+N7
+1 Januari 1877.
+W
+o ondergeteekende
+Dirk Christiaan Luca Heelmeier, hoofd
+onderwyzer wonende te Apeldoorn, als
+in gemeenschap van goederen onder deze
+met gehuwd met Mejusvrouw Mlaria
+Knops.
+verklaart.
+dat de Heer Pieter Knops, in leven zonder
+beroep gewoond hebbende te Utrecht,
+en aldaar overleden 1 Januari 1877, ab
+intestato, tot zijne eenige erfgename
+uit kracht der wet heeft nagelaten
+zijne eenige dochter genoemde Mejuf„
+vrouw Maria Knops.
+dat door hem geen goederen als be„
+zwaarde erfgenaam of in vrucht ge„
+brink werden bezezen en dat door
+zijn overlijden geen periodieke uit„
+Ge
+keeringen bij ropvolging over gegaan
+1
+of vervallen zijn
+dat het zyne nalatenschap behoort.
+3/4 in
+Eenige huizen, erven entuin, staande
+en gelegen te Utrecht, kadasten ge„
+meente Utrecht sectie C. nog 1788.
+1709, 3067 tot en met 3978, 3539. 4288.
+en Sectie E A. nos 1323 tot en met
+1327 alles zamen groot 17 aren.
+en 3/9 in de 1/2. in:
+twee heeren huizen onder éen dak
+met erf, staande, en gelegen in de ge„
+meente de Bilt, kadasten Sectie D.
+no 508, groot 13 aren 60 centiaren
+de ondergeteekende verklaart ten deze
+domicilie te kiezen ten kontore van den
+notaris vGoudoever te Utrecht.
+doorgehaad een lesten in regel twee en dertig
+Epel doorn 20 Januari, 1877
+D.C.L. Neesmeyer.
+```
+
+---
+
+### 🔹 Model: Transkribus + Open-AI
+### 🔹 Version: Dutchess I + Chat GPT 5
+**Prompt:** _No prompt needed_ + Underneath you can see the transcription of one of the tools i used, which is as accurate as possible, however it makes logical mistakes, for example it states "Geboekt 9 february 1947" in the second line, in the top left corner - but it is a logicaly wrong - the number itself is unreadabable, but from the other text it is logical to estimate that it is not 1947 but 1877. Try to refine this text with indication and correction of such logical errors. Don't change any structure or symbols besides those which may be indicated as such errors  
+**Result:** 
+
+```text 
+Reg=r 1 N:o 5774797
+Memorie van aangifte der
+Geboekt 9 february 1877 [corrected: 1877, not 1947]
+naatenschap van den Heer
+dae=r d=o 31 f=o 175 N=o 2 /6333
+Pieter Knops, gewoond hebben
+Tafel 5 leis d=o 20 f=o 96 N=o 64
+de en overleden te Utrecht
+N7
+1 Januari 1877 [confirmed].
+W
+o ondergeteekende
+Dirk Christiaan Luch [corrected: Luch, not Luca] Heelmeier, hoofd
+onderwyzer wonende te Apeldoorn, als
+in gemeenschap van goederen onder deze
+met gehuwd met Mejufvrouw Maria [corrected: Maria, not Mlaria]
+Knops.
+verklaart.
+dat de Heer Pieter Knops, in leven zonder
+beroep gewoond hebbende te Utrecht,
+en aldaar overleden 1 Januari 1877, ab
+intestato, tot zijne eenige erfgename
+uit kracht der wet heeft nagelaten
+zijne eenige dochter genoemde Mejuf„
+vrouw Maria Knops.
+dat door hem geen goederen als be„
+zwaarde erfgenaam of in vrucht ge„
+bruik werden bezeten en dat door
+zijn overlijden geen periodieke uit„
+keeringen bij opvolging over gegaan
+of vervallen zijn
+dat het zijne nalatenschap behoort.
+3/4 in
+Eenige huizen, erven en tuin, staande
+en gelegen te Utrecht, kadaster ge„
+meente Utrecht sectie C. nos 1708 [corrected: 1788 → 1708],
+1709, 3067 tot en met 3978, 3539, 4288,
+en Sectie E A. nos 1323 tot en met
+1327 alles zamen groot 17 aren.
+en 3/9 in de 1/2 in:
+twee heerenhuizen onder één dak
+met erf, staande en gelegen in de ge„
+meente de Bilt, kadaster Sectie D.
+no 500 [corrected: 508 → 500, per original handwriting], groot 13 aren 60 centiaren.
+de ondergeteekende verklaart ten deze
+domicilie te kiezen ten kantore van den
+notaris v. Goudoever [corrected: vGoudoever → v. Goudoever] te Utrecht.
+doorgehaald een lessen in regel twee en dertig
+Apeldoorn 20 Januari, 1877
+D.C.L. Niemeyer [corrected: Neesmeyer → Niemeyer].
+```
+
+---
+
+### 🔹 Model: Open-AI
+### 🔹 Version: Chat-GPT 5
+**Prompt:** “You are an expert OCR system. Transcribe the attached image of a 19th-century Dutch handwritten document into Dutch text. Preserve original spelling and punctuation exactly, without translating or adding commentary. If any word is illegible, insert a marker like ‘[?]’ for it. Provide only the verbatim transcription.”  
+**Result:** 
+
+```text 
+Kuyk 4 Nᵒ 57494
+Geborek 29 februari 1874
+dags febr 15 1875 Nᵒ 6333
+tafel 5 blad 220 & 306 Nᵒ 64
+
+Naam en rang if de elea
+na bekend van den Heer
+Pieter Smaas, gewezen hekiker.
+Hee overleden te Utrecht
+7 maart 1874.
+
+De ondergeteekende
+Wijk Christian Lech, Notaris voornoemd,
+verklaart verzoende het zyn Blomen, als
+in gemeenschap van goederen geweest met zijne vrouw Maria
+Smaas,
+verklaart:
+dat de Heer Pieter Smaas, in leven, wedner,
+beroep gewonen hebbende te Utrecht als
+hulbalans overleden 7 Maart 1874,
+intestato, zij zijne eenige erfgenamen
+uit krachte der wet zijne nagelaten
+kleine kinderen, geboren bij zijne
+vrouw Maria Smaas,
+dat voor hen geen bijzondere be-
+schikking der erfenis is gedaan,
+zoodat voor hen geen verdeeling der
+boedel noodig is geweest, en dat dus
+geen geld of afschrijving over eigendom
+is verkregen of gedaan,
+wat hetzij de nalatenschap betreft.
+
+Zij is
+Eenige huizen, erven en tuinen, staande
+en gelegen te Utrecht aangedaan z.g.
+meest de Utrecht secties gen Nᵒ 1306
+1409, 906, groot resp 9a 40ᵃ 55ᵃ 9ᵃ 40ᵃ
+bel Sectie & A, nos 1323 groot tezamen
+13a 41ᵃ alles duinen groot 1ᵃ 74ᵃ.
+
+Deze huizen, erven en tuinen, staande
+met een graandale belegen in de ge-
+meente de Bilt, belast sectie D
+no 5001, groot 13 aren, 60 centiaren,
+de ondergeteekende verklaart ten dezen
+handelen bij zijn der kinderen van den
+overledene en de weduwe te Utrecht.
+
+'s Hertogenbosch 20 januari 1874
+
+W.C.L. Niemeyer
+```
+
+---
+
+### 🔹 Model: Anthropic Claude
+### 🔹 Version: Opus 4
+**Prompt:** “You are a historian’s AI assistant skilled in handwritten text recognition. Transcribe the Dutch cursive handwriting in the image into plain Dutch text. Reproduce the text exactly as written (including any archaic 19th-century spelling). Do not add any new words or explanations.”  
+**Result:** 
+
+```text 
+Reg: 4 No 5 747
+Ontvangen February 1817
+Reg: Huy fo 195 No 3 fo 333
+5 April 3 den 11e 20 & No 20 No 64
+M.
+Zo ondergetekende
+Dirk Christian Lucas, bekende voor homij
+met eenen zeverende hoeveelheid, als
+ten gehouden hofs van poeperen vande wie
+met schenen met Mynheer Johan
+Knopf.
+verklaar:
+dat de Heer Baden Knobbs, en huyde der
+derselfs persoons het herstelde hoedanig
+in 't kaar overleden 't kunnen 't Poijen
+en federde, dat myne schuld en immer
+niet meer bedroegen als 't dag schaften
+zyne deselfs anderen genoembde elf uit
+vrouw Maria Knopfs.
+dat doeg koop goed pas heerstels de
+twaarde en gedaante als in genoot de
+bronk ruinder parkin bij dag heben
+hgen over te doen hem heel salaris tot
+de verenig dig capital van 800 rijksdal
+of een vaffers 2e.
+dat het zyne verdienende te behoren.
+[Left margin notation:]
+J J
+En...
+Eenen honderd negentig halen, staande
+in Julij 1809 bij Utrecht verlaten en
+nietweed gedagte zedert (?) was 1 10 fl.
+12000. 2967 het begemet 9474. 3529.42.06.
+bij Sophie K M was 1869 het de meid
+1957 alles samen groot 17 aren.
+en 87 in de t m: [?]
+Twee Honderd en neder zlee de ta
+met erfs staande in gehgen in de ge-
+meente de Poel, kadastraal Sectio A.
+no 501, groot 13 aren 60 centiaren.
+[Continuing with remaining text portions...]
+```
