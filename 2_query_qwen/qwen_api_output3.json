@@ -1,0 +1,71 @@
+{
+  "name": "Willem Frederik Anton Koelenenmid",
+  "date_of_death": "1893-06-30",
+  "total_assets": "40128.99",
+  "total_liabilities": "235.22",
+  "net_wealth": "39893.77",
+  "assets": [
+    {
+      "description": "Effecten, geheel volgens de prijs courant van den 26 Junij 1893.",
+      "value": "10000.00"
+    },
+    {
+      "description": "Drie loten bankactie te Amsterdam.",
+      "value": "375.00"
+    },
+    {
+      "description": "Eene obligatie van de Nederlandseche Spoorweg-Maatschappij.",
+      "value": "1171.875
+    },
+    {
+      "description": "Drie loten aandelen in de Groot-Russische Spoorweg-Maatschappij.",
+      "value": "23033.75"
+    },
+    {
+      "description": "Een aandeel in de Belgische Spoorwegmaatschappij.",
+      "value": "12210.75"
+    },
+    {
+      "description": "Obligatien van de West-Brabantsche Spoorweg-Maatschappij.",
+      "value": "1025.00"
+    },
+    {
+      "description": "Obligatien van de Hirsch-Slachterij voor Spoornw. Maatschappij.",
+      "value": "2812.50"
+    },
+    {
+      "description": "Obligatien van de Nederlandsche Spoorweg-Maatschappij.",
+      "value": "4500.00"
+    },
+    {
+      "description": "Aandeel in de Hollandsche IJzeren Spoorweg-Maatschappij.",
+      "value": "1152.00"
+    },
+    {
+      "description": "Obligatien van de Oostersche Spoorweg-Maatschappij.",
+      "value": "2871.00"
+    },
+    {
+      "description": "Obligatien van de Russisch-Baltische Spoorweg-Maatschappij.",
+      "value": "2415.80"
+    },
+    {
+      "description": "Obligatien van de Hongaarsche Spoorweg-Maatschappij.",
+      "value": "9622.80"
+    },
+    {
+      "description": "Obligatien van de Russisch-Oostenrijksche Spoorweg-Maatschappij.",
+      "value": "21.00"
+    },
+    {
+      "description": "Obligatien van de Russisch-Amerikaansche Spoorweg-Maatschappij.",
+      "value": "50.12"
+    }
+  ],
+  "liabilities": [
+    {
+      "description": "Beroepsverplichtingen (voor schulden, belastingen, enz.)",
+      "value": "235.22"
+    }
+  ]
+}

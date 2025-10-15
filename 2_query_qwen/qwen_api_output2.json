@@ -1,0 +1,19 @@
+{
+  "name": "Willem Frederik Anton",
+  "date_of_death": "30 June 1893",
+  "total_assets": "f 40128.99",
+  "total_liabilities": "f 235.22",
+  "net_wealth": "f 39893.77",
+  "assets": [
+    {
+      "description": "Various bonds and interest-bearing instruments (including 1886 bonds with 4% interest and other financial assets)",
+      "value": "f 40128.99"
+    }
+  ],
+  "liabilities": [
+    {
+      "description": "Unpaid debts and obligations including multiple small claims and administrative costs",
+      "value": "f 235.22"
+    }
+  ]
+}
