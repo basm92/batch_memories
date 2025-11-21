@@ -27,7 +27,8 @@ This document collects and compares transcription outputs from various LLM and H
 | Transkribus | Dutchess I |Great performance, occurs only logical errors |
 | Transkribus + Open-AI | Dutchess I + Chat-GPT 5 |Great performance, occurs only logical errors |
 | Open-AI | Chat-Gpt 5 | | 
-| Anthropic Claude | Opus 4 | |
+| Anthropic Claude | Opus 4 | very poor performance |
+| DeepSeek | x | Awful |
 | Google Bard (Vision-Fallback) |  | | 
 | Microsoft Bing Chat (Image OCR) |  | 
 | Google Cloud Vision API (Handwriting OCR) |  | | 
@@ -44,6 +45,7 @@ This document collects and compares transcription outputs from various LLM and H
 | ARletta Historic Dutch Models |  | | 
 | LLaVA |  | | 
 | Mistral 7B (with OCR Prompting) |  | | 
+gwent
 
 ---
 
@@ -280,3 +282,38 @@ meente de Poel, kadastraal Sectio A.
 no 501, groot 13 aren 60 centiaren.
 [Continuing with remaining text portions...]
 ```
+
+---
+
+### 🔹 Model: 
+### 🔹 Version: 
+**Prompt:**  
+**Result:** 
+
+```text 
+
+```
+
+---
+
+### 🔹 Model: 
+### 🔹 Version: 
+**Prompt:**  
+**Result:** 
+
+```text 
+
+```
+
+---
+
+### 🔹 Model: 
+### 🔹 Version: 
+**Prompt:**  
+**Result:** 
+
+```text 
+
+```
+
+---
