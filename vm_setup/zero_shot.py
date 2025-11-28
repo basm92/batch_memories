@@ -27,6 +27,15 @@ prompt = f"<image>\n<|grounding|>{five_shot_context}\nAnalyze the current image.
 image_file = 'your_image.jpg'
 output_path = 'your/output/dir'
 
+# infer(self, tokenizer, prompt='', image_file='', output_path = ' ', base_size = 1024, image_size = 640, crop_mode = True, test_compress = False, save_results = False):
+
+# Tiny: base_size = 512, image_size = 512, crop_mode = False
+# Small: base_size = 640, image_size = 640, crop_mode = False
+# Base: base_size = 1024, image_size = 1024, crop_mode = False
+# Large: base_size = 1280, image_size = 1280, crop_mode = False
+
+# Gundam: base_size = 1024, image_size = 640, crop_mode = True
+
 # Run Inference
 res = model.infer(
     tokenizer, 
